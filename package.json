@@ -15,6 +15,14 @@
     "scripts/install-skill.mjs",
     "README.md"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sethwebster/consensus.git"
+  },
+  "homepage": "https://github.com/sethwebster/consensus#readme",
+  "bugs": {
+    "url": "https://github.com/sethwebster/consensus/issues"
+  },
   "engines": {
     "node": ">=20"
   },

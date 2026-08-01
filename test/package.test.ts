@@ -9,6 +9,7 @@ const manifest = JSON.parse(readFileSync(new URL("package.json", ROOT), "utf8"))
   bin: Record<string, string>;
   files: string[];
   publishConfig?: { access?: string };
+  repository?: { type?: string; url?: string } | string;
 };
 
 /** What `npm publish` would actually upload. */
@@ -32,6 +33,17 @@ test("the published package contains the skill the installer copies", () => {
 test("a scoped package must publish with public access to be installable", () => {
   if (!manifest.name.startsWith("@")) return;
   assert.equal(manifest.publishConfig?.access, "public");
+});
+
+test("the manifest declares the repository provenance checks verify against", () => {
+  // npm rejects a provenance-signed publish (422) when package.json does not
+  // name the same repository the workflow built from.
+  const declared = typeof manifest.repository === "string" ? manifest.repository : manifest.repository?.url;
+  assert.ok(declared, "package.json needs a repository field to publish with provenance");
+
+  const remote = execFileSync("git", ["remote", "get-url", "origin"], { encoding: "utf8" }).trim();
+  const normalize = (url: string) => url.replace(/^git\+/, "").replace(/\.git$/, "").replace(/\/$/, "");
+  assert.equal(normalize(declared), normalize(remote));
 });
 
 test("tests and build config stay out of the tarball", () => {
