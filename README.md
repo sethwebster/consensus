@@ -132,7 +132,7 @@ like an auth error.
 | --- | --- |
 | `enter` | send — or queue it, if the panel is busy |
 | `↑ ↓` | walk this session's earlier prompts (survives a resume) |
-| `pgup` `pgdn` | scroll the conversation (auto-follows the bottom otherwise) |
+| wheel / `pgup` `pgdn` | scroll the conversation (auto-follows the bottom otherwise) |
 | `ctrl-t` | browse a turn's answers as tabs (see below) |
 | `esc` | stop the running turn and drop the queue |
 | `ctrl-r` | toggle per-model responses inline |
@@ -145,18 +145,24 @@ The REPL runs on the terminal's **alternate screen** — the same thing `vim` an
 alternate screen has no scrollback of its own, so your terminal's scrollbar has
 nothing to scroll: the conversation is scrolled inside the app instead.
 
-Scroll with `pgup` / `pgdn`. The view follows the bottom on its own while
-output arrives, and returns to following once you scroll back down — the footer
-reads `live` when it is following, and `12-30/94` when it is not.
+Scroll with the wheel or `pgup` / `pgdn`. The view follows the bottom on its
+own while output arrives, and returns to following once you scroll back down —
+the footer reads `live` when it is following, and `12-30/94` when it is not.
 
-**Wheel scrolling is off by default, so that selecting text works.** A terminal
-can either do click-drag selection itself or hand mouse events to the app, not
-both, and losing selection is the worse trade to impose. Turn the wheel on when
-you want it:
+**Wheel scrolling is on by default.** While it is on the terminal hands mouse
+events to the app instead of doing click-drag selection itself — but every
+modern terminal still selects with `shift` held (`fn` or `option` in
+Terminal.app), so you keep both. If you would rather have plain click-drag
+selection:
 
-- `/mouse` toggles it for the session — on to scroll by wheel, off to select
-  and copy text again.
-- `CONSENSUS_MOUSE=1` starts with it on.
+- `/mouse` toggles the wheel for the session — off to select and copy text
+  without a modifier, on to scroll by wheel again.
+- `CONSENSUS_MOUSE=0` starts with it off.
+
+With the wheel off, wheel ticks do nothing (`pgup` / `pgdn` still scroll). That
+is deliberate: the terminal's fallback for wheel input on the alternate screen
+is to send arrow keys, which here would page through prompt history and rewrite
+your draft — the app turns that mode off.
 
 To get an answer out without selecting it at all, `/copy` puts the last one on
 the clipboard and `/save` writes the whole conversation to markdown.

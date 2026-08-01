@@ -36,7 +36,8 @@ export interface AppControl {
 function wheelDelta(input: string): number {
   let delta = 0;
   for (const event of input.matchAll(/\u001B?\[<(\d+);\d+;\d+[Mm]/g)) {
-    const button = Number(event[1]);
+    // Mask the shift/alt/ctrl bits so a modified wheel still scrolls.
+    const button = Number(event[1]) & ~0b11100;
     if (button === 64) delta -= 3;
     else if (button === 65) delta += 3;
   }
@@ -202,8 +203,8 @@ export function App({ session, cwd, control }: AppProps) {
         setMouseReporting(next);
         setFlash(
           next
-            ? "wheel scrolling on — text selection is the terminal's again with /mouse off"
-            : "wheel scrolling off — drag to select text; pgup/pgdn still scroll",
+            ? "wheel scrolling on — hold shift to select text, /mouse to turn off"
+            : "wheel scrolling off — drag selects text; pgup/pgdn still scroll",
         );
         return;
       }
@@ -929,7 +930,7 @@ function HelpOverlay({ height }: { height: number }) {
     ["alt-enter / ctrl-j", "newline — works everywhere"],
     ["trailing \\", "newline — works everywhere"],
     ["↑ ↓", "walk this session's earlier prompts"],
-    ["pgup pgdn", "scroll the conversation (wheel too, after /mouse)"],
+    ["wheel / pgup pgdn", "scroll the conversation (/mouse frees the wheel for selection)"],
     ["esc", "stop the run and drop the queue"],
     ["ctrl-t", "browse a turn's tabs: ←→ tabs, ↑↓ scroll, [ ] turns, esc back"],
     ["ctrl-r", "toggle per-model responses inline"],

@@ -1,5 +1,8 @@
 import { spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
+import { appendFileSync, mkdirSync } from "node:fs";
+import { join } from "node:path";
+import { CONFIG_DIR } from "./config.js";
 import type { Member } from "./config.js";
 import { memberLabel } from "./config.js";
 import { getProvider, which } from "./providers.js";
@@ -97,7 +100,8 @@ export async function runMember(
   if (provider.needsModel && !member.model) {
     return fail(member, label, `${provider.label} requires a model (use ${provider.id}:<model>)`, started);
   }
-  if (!which(provider.bin)) {
+  const bin = which(provider.bin);
+  if (!bin) {
     return fail(member, label, `\`${provider.bin}\` is not on PATH`, started);
   }
   if (options.signal?.aborted) {
@@ -109,7 +113,8 @@ export async function runMember(
   installSignalHandlers();
 
   return new Promise<RunResult>((resolve) => {
-    const child = spawn(provider.bin, provider.argv(prompt, member.model), {
+    const argv = provider.argv(prompt, member.model);
+    const child = spawn(provider.bin, argv, {
       cwd: options.cwd,
       env: { ...process.env, ...provider.env, NO_COLOR: "1", FORCE_COLOR: "0", TERM: "dumb" },
       stdio: ["ignore", "pipe", "pipe"],
@@ -207,7 +212,7 @@ export async function runMember(
       lingering.unref?.();
     });
 
-    child.on("close", (code) => {
+    child.on("close", (code, signal) => {
       const ms = Date.now() - started;
       const text = provider.postprocess ? provider.postprocess(clean(stdout)) : clean(stdout);
 
@@ -215,16 +220,16 @@ export async function runMember(
         finish({ member, label, ok: false, text, error: "cancelled", ms });
         return;
       }
-      if (timedOut) {
-        finish({ member, label, ok: false, text, error: `timed out after ${Math.round(options.timeoutMs / 1000)}s`, ms });
-        return;
-      }
-      if (code !== 0) {
-        finish({ member, label, ok: false, text, error: explain(stderr, code), ms });
-        return;
-      }
-      if (!text) {
-        finish({ member, label, ok: false, text, error: "returned an empty response", ms });
+      const error = timedOut
+        ? `timed out after ${Math.round(options.timeoutMs / 1000)}s`
+        : code !== 0
+          ? explain(stderr, code)
+          : !text
+            ? "returned an empty response"
+            : null;
+      if (error) {
+        logFailure({ label, bin, argv, cwd: options.cwd, code, signal, error, stderr });
+        finish({ member, label, ok: false, text, error, ms });
         return;
       }
       finish({ member, label, ok: true, text, ms });
@@ -252,6 +257,45 @@ function explain(stderr: string, code: number | null): string {
 
 function fail(member: Member, label: string, error: string, started: number): RunResult {
   return { member, label, ok: false, text: "", error, ms: Date.now() - started };
+}
+
+/**
+ * The whole story behind a failed member, appended to CONFIG_DIR/debug.log.
+ *
+ * The UI shows one stderr headline, which is enough for "not logged in" but
+ * not for environment-specific failures — a terminal whose PATH resolves a
+ * different binary, an env var the CLI objects to. Recording the resolved
+ * binary, PATH, exit status and full stderr makes those diagnosable from any
+ * terminal after the fact.
+ */
+function logFailure(details: {
+  label: string;
+  bin: string;
+  argv: string[];
+  cwd: string;
+  code: number | null;
+  signal: NodeJS.Signals | null;
+  error: string;
+  stderr: string;
+}): void {
+  try {
+    mkdirSync(CONFIG_DIR, { recursive: true });
+    const entry = [
+      `--- ${new Date().toISOString()} ${details.label}: ${details.error}`,
+      `bin: ${details.bin}`,
+      `argv: ${JSON.stringify(details.argv.map((arg) => (arg.length > 200 ? `${arg.slice(0, 200)}…` : arg)))}`,
+      `cwd: ${details.cwd}`,
+      `exit: code=${details.code} signal=${details.signal}`,
+      `PATH: ${process.env.PATH ?? ""}`,
+      `stderr:`,
+      clean(details.stderr).slice(-8000) || "(empty)",
+      "",
+      "",
+    ].join("\n");
+    appendFileSync(join(CONFIG_DIR, "debug.log"), entry, "utf8");
+  } catch {
+    // Diagnostics must never take the run down with them.
+  }
 }
 
 /** Ask every member the same prompt, all at once. */

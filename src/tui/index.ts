@@ -3,7 +3,7 @@ import { createElement } from "react";
 import type { Config } from "../config.js";
 import type { StoredSession } from "../sessions.js";
 import { App } from "./app.js";
-import { mouseStartsOn, setMouseReporting } from "./mouse.js";
+import { ALT_SCROLL_OFF, ALT_SCROLL_ON, mouseStartsOn, setMouseReporting } from "./mouse.js";
 import { ConsensusSession } from "./session.js";
 
 const ALT_ENTER = "\u001B[?1049h";
@@ -43,8 +43,10 @@ export async function startTui(
   if (process.stdin.isTTY) process.stdin.setRawMode(true);
 
   // Enter the alternate screen and wipe it, so anything echoed before we got
-  // here does not sit at the top of the session.
-  process.stdout.write(`${ALT_ENTER}${CLEAR}`);
+  // here does not sit at the top of the session. Alternate scroll goes off for
+  // the whole session: with it on, a wheel tick while mouse reporting is off
+  // arrives as arrow keys and walks prompt history instead of scrolling.
+  process.stdout.write(`${ALT_ENTER}${CLEAR}${ALT_SCROLL_OFF}`);
   if (mouseStartsOn()) setMouseReporting(true);
 
   const instance = render(createElement(App, { session, cwd, control }), {
@@ -64,7 +66,7 @@ export async function startTui(
     session.stop();
     session.persist();
     setMouseReporting(false);
-    process.stdout.write(ALT_EXIT);
+    process.stdout.write(`${ALT_SCROLL_ON}${ALT_EXIT}`);
   }
 
   return 0;
