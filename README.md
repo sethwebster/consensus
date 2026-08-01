@@ -410,12 +410,14 @@ directory with a `SKILL.md`; installing it copies that directory into the
 harness's skills folder.
 
 ```bash
-consensus-skill               # → ~/.claude/skills/consensus   (personal)
-consensus-skill --project     # → ./.claude/skills/consensus   (checked into a repo)
-consensus-skill --dir <path>  # → <path>/consensus             (any harness's skills dir)
-consensus-skill --force       # overwrite an existing install
-consensus-skill --print       # print the bundled skill's source path
+consensus skill install               # → ~/.claude/skills/consensus   (personal)
+consensus skill install --project     # → ./.claude/skills/consensus   (checked into a repo)
+consensus skill install --dir <path>  # → <path>/consensus             (any harness's skills dir)
+consensus skill install --force       # overwrite an existing install
+consensus skill install --print       # print the bundled skill's source path
 ```
+
+The standalone `consensus-skill` bin takes the same flags and does the same thing.
 
 From a clone without a global install, `npm run skill:install -- --project` does
 the same thing. The skill drives the `consensus` binary over the shell, so that

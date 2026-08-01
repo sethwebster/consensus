@@ -1,6 +1,8 @@
 #!/usr/bin/env node
+import { spawnSync } from "node:child_process";
 import { fstatSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import * as p from "@clack/prompts";
 import pc from "picocolors";
@@ -46,6 +48,7 @@ ${pc.bold("COMMANDS")}
   resume [id]      Reopen a saved session — the most recent when id is omitted
   sessions         List saved sessions ("sessions rm <id>" deletes one)
   init [-y]        Choose the panel and synthesizer; -y accepts autodetection
+  skill install    Install the bundled Agent Skill ("skill install --help" for targets)
   detect           Show which model CLIs are installed
   config           Print the active configuration and its path
 
@@ -73,6 +76,10 @@ ${pc.bold("EXAMPLES")}
 `;
 
 async function main(argv: string[]): Promise<number> {
+  // Handled before parseArgs: the installer has its own flags (--project,
+  // --dir, …) that the main option table would reject.
+  if (argv[0] === "skill") return skillCommand(argv.slice(1));
+
   const commands = new Set([
     "ask",
     "tui",
@@ -134,6 +141,20 @@ async function main(argv: string[]): Promise<number> {
 }
 
 type Values = Awaited<ReturnType<typeof parseArgs>>["values"] & Record<string, unknown>;
+
+/** `consensus skill install [...]` — run the bundled installer, forwarding its flags. */
+function skillCommand(rest: string[]): number {
+  const [sub, ...flags] = rest;
+  if (sub !== "install") {
+    console.error(pc.red(`Usage: consensus skill install [--global | --project | --dir <path>] [--force]`));
+    console.error(pc.dim("Run `consensus skill install --help` for details."));
+    return 2;
+  }
+  const installer = fileURLToPath(new URL("../scripts/install-skill.mjs", import.meta.url));
+  const { status, error } = spawnSync(process.execPath, [installer, ...flags], { stdio: "inherit" });
+  if (error) throw error;
+  return status ?? 1;
+}
 
 /**
  * Launch the REPL. ink is imported lazily to keep plain `ask` runs fast.
