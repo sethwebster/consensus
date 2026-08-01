@@ -10,7 +10,8 @@ import { copyToClipboard } from "./clipboard.js";
 import type { CommandSpec } from "./commands.js";
 import { COMMANDS, completions, label, resolveCommand } from "./commands.js";
 import { editInEditor } from "./editor.js";
-import { mouseStartsOn, setMouseReporting } from "./mouse.js";
+// Ink has no mouse support, so wheel reports arrive here as ordinary input.
+import { mouseStartsOn, setMouseReporting, wheelDelta } from "./mouse.js";
 import { useConversation, useSession, useTabLines, useViewport } from "./hooks.js";
 import { PromptInput } from "./prompt-input.js";
 import type { Line, Tab } from "./lines.js";
@@ -24,24 +25,6 @@ type Overlay = "help" | "members" | "sessions" | "tabs" | "keys" | "queue" | nul
 /** Lets the app force a full repaint after a child process used the terminal. */
 export interface AppControl {
   repaint(): void;
-}
-
-/**
- * Lines to scroll for a chunk of SGR mouse reports, negative for up.
- *
- * Ink has no mouse support, so wheel reports arrive as ordinary input — and
- * with the leading ESC already consumed, which is why it is optional here.
- * Buttons 64 and 65 are wheel up and down; other buttons are clicks we ignore.
- */
-function wheelDelta(input: string): number {
-  let delta = 0;
-  for (const event of input.matchAll(/\u001B?\[<(\d+);\d+;\d+[Mm]/g)) {
-    // Mask the shift/alt/ctrl bits so a modified wheel still scrolls.
-    const button = Number(event[1]) & ~0b11100;
-    if (button === 64) delta -= 3;
-    else if (button === 65) delta += 3;
-  }
-  return delta;
 }
 
 /** Human-readable name for a key event, for the /keys diagnostic. */

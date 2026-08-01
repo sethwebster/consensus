@@ -17,6 +17,7 @@ import {
   pickSynthesizer,
   saveConfig,
 } from "./config.js";
+import { inlinePrompt, joinPrompt, shouldReadStdin } from "./prompt.js";
 import { PROVIDERS, detect, getProvider } from "./providers.js";
 import { transcript } from "./report.js";
 import type { StoredSession } from "./sessions.js";
@@ -434,24 +435,23 @@ async function readPrompt(
   positionals: string[],
   explicitStdin: boolean,
 ): Promise<string> {
-  const marked = positionals.includes("-");
-  const inline = positionals.filter((word) => word !== "-").join(" ").trim();
-  const parts: string[] = [];
-
-  if (file) parts.push(readFileSync(file, "utf8").trim());
+  const inline = inlinePrompt(positionals);
+  const fileText = file ? readFileSync(file, "utf8") : undefined;
 
   const piped = hasPipedStdin();
   const hasOtherSource = Boolean(inline || file);
+  const wantsStdin = shouldReadStdin({
+    piped,
+    explicit: explicitStdin,
+    marked: positionals.includes("-"),
+    hasOtherSource,
+  });
 
-  if (piped && (explicitStdin || marked || !hasOtherSource)) {
-    const text = (await readStdin()).trim();
-    if (text) parts.push(text);
-  } else if (piped && hasOtherSource) {
+  if (piped && !wantsStdin) {
     process.stderr.write(pc.dim("stdin not read — pass `-` or --stdin to include it\n"));
   }
 
-  if (inline) parts.push(inline);
-  return parts.filter(Boolean).join("\n\n").trim();
+  return joinPrompt([fileText, wantsStdin ? await readStdin() : undefined, inline]);
 }
 
 /**

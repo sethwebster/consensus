@@ -31,3 +31,26 @@ export function setMouseReporting(enabled: boolean): void {
 export function mouseStartsOn(): boolean {
   return process.env.CONSENSUS_MOUSE !== "0";
 }
+
+/** SGR mouse reports: `ESC [ < button ; col ; row M|m`. */
+const SGR = /\u001B?\[<(\d+);\d+;\d+[Mm]/g;
+
+/** Modifier bits (shift 4, alt 8, ctrl 16) layered onto the button byte. */
+const MODIFIERS = 0b11100;
+
+/**
+ * Net scroll from every wheel tick in one read, in lines: negative is up.
+ *
+ * A single read can carry a burst of ticks, so they accumulate rather than
+ * counting once. Modifier bits are masked off — the wheel has to keep working
+ * while shift is held, since that is how text is selected with reporting on.
+ */
+export function wheelDelta(input: string): number {
+  let delta = 0;
+  for (const event of input.matchAll(SGR)) {
+    const button = Number(event[1]) & ~MODIFIERS;
+    if (button === 64) delta -= 3;
+    else if (button === 65) delta += 3;
+  }
+  return delta;
+}

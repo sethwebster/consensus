@@ -36,7 +36,7 @@ export interface RunState {
 const CSI = /\u001B\[[0-?]*[ -/]*[@-~]/g;
 const OSC = /\u001B\][\s\S]*?(?:\u0007|\u001B\\)/g;
 
-function clean(text: string): string {
+export function cleanOutput(text: string): string {
   return text.replace(OSC, "").replace(CSI, "").replace(/\r/g, "").trim();
 }
 
@@ -146,7 +146,7 @@ export async function runMember(
       killTree(child);
       child.stdout?.destroy();
       child.stderr?.destroy();
-      const text = provider.postprocess ? provider.postprocess(clean(stdout)) : clean(stdout);
+      const text = provider.postprocess ? provider.postprocess(cleanOutput(stdout)) : cleanOutput(stdout);
       finish({ member, label, ok: false, text, error, ms: Date.now() - started });
     };
 
@@ -200,7 +200,7 @@ export async function runMember(
     child.on("exit", () => {
       lingering = setTimeout(() => {
         if (settled) return;
-        const text = provider.postprocess ? provider.postprocess(clean(stdout)) : clean(stdout);
+        const text = provider.postprocess ? provider.postprocess(cleanOutput(stdout)) : cleanOutput(stdout);
         child.stdout?.destroy();
         child.stderr?.destroy();
         finish(
@@ -214,7 +214,7 @@ export async function runMember(
 
     child.on("close", (code, signal) => {
       const ms = Date.now() - started;
-      const text = provider.postprocess ? provider.postprocess(clean(stdout)) : clean(stdout);
+      const text = provider.postprocess ? provider.postprocess(cleanOutput(stdout)) : cleanOutput(stdout);
 
       if (cancelled) {
         finish({ member, label, ok: false, text, error: "cancelled", ms });
@@ -223,7 +223,7 @@ export async function runMember(
       const error = timedOut
         ? `timed out after ${Math.round(options.timeoutMs / 1000)}s`
         : code !== 0
-          ? explain(stderr, code)
+          ? explainFailure(stderr, code)
           : !text
             ? "returned an empty response"
             : null;
@@ -242,8 +242,8 @@ export async function runMember(
  * progress noise crowd out the real message, so prefer a line that reads like an
  * error and fall back to the last thing printed.
  */
-function explain(stderr: string, code: number | null): string {
-  const lines = clean(stderr)
+export function explainFailure(stderr: string, code: number | null): string {
+  const lines = cleanOutput(stderr)
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line && !/^\s*at\s/.test(line));
@@ -288,7 +288,7 @@ function logFailure(details: {
       `exit: code=${details.code} signal=${details.signal}`,
       `PATH: ${process.env.PATH ?? ""}`,
       `stderr:`,
-      clean(details.stderr).slice(-8000) || "(empty)",
+      cleanOutput(details.stderr).slice(-8000) || "(empty)",
       "",
       "",
     ].join("\n");
