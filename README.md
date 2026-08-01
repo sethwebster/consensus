@@ -455,8 +455,11 @@ empty commit describing it:
 git commit --allow-empty -m "fix: correct the wheel modifier mask"
 ```
 
-Publishing needs one repository secret, `NPM_TOKEN`, holding an npm automation
-token with publish rights. `GITHUB_TOKEN` is provided by Actions.
+Publishing needs no secrets. npm
+[trusted publishing](https://docs.npmjs.com/trusted-publishers) authenticates the
+workflow itself over OIDC — the release job requests an `id-token`, npm trades it
+for short-lived publish rights, and the package gets provenance for free. Nothing
+expires, so nothing has to be rotated. `GITHUB_TOKEN` is provided by Actions.
 
 ## License
 

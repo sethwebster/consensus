@@ -32,6 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write # commit the version bump and CHANGELOG, push the tag
+      id-token: write # mint the OIDC token npm trades for publish rights
       issues: write # comment on issues the release closes
       pull-requests: write
     steps:
@@ -43,10 +44,12 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
+          # Publishing goes through npm trusted publishing, which the npm CLI
+          # auto-detects from the OIDC token — it needs 11.5.1+, and the latest
+          # Node 24 is well past that. No npm token is involved.
           node-version: 24
           cache: npm
       - run: npm ci
       - run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

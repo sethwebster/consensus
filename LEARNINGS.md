@@ -48,9 +48,16 @@ do about it — instructions live in [DIARY.md](DIARY.md).
 
 - `.github/workflows/ci.yml` runs the suite on every push and PR; the release
   job is `needs: test`, so nothing publishes from a red build.
-- Publishing needs an `NPM_TOKEN` repository secret. `GITHUB_TOKEN` is supplied
-  by Actions, and `@semantic-release/git` needs `contents: write` to push the
-  version bump and tag back to `main`.
+- Publishing uses npm trusted publishing (OIDC), not a token.
+  `@semantic-release/npm` 13.1.5 verifies it by trading a GitHub ID token for a
+  registry token, and `verify-auth.js` returns early on success — so no
+  `NPM_TOKEN` is read. It then discards that token: the publish itself relies on
+  the npm CLI auto-detecting trusted publishing, which needs npm 11.5.1+.
+- The release job needs `id-token: write` for that exchange, and `contents:
+  write` (not `read`) because `@semantic-release/git` pushes the version bump,
+  CHANGELOG, and tag back to `main`.
+- npm matches the OIDC claim against a trusted publisher registered for an exact
+  workflow filename, so renaming `ci.yml` breaks publishing.
 - A scoped package publishes as restricted unless `publishConfig.access` is
   `public`. The old `release` script passed `--access public` by hand;
   semantic-release does not, so the field is now in `package.json`.
