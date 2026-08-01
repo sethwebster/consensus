@@ -395,6 +395,31 @@ const answers = await runAll(members, "explain CRDTs", {
 });
 ```
 
+## Agent skill
+
+`consensus` ships an installable **[Agent Skill](https://docs.claude.com/en/docs/claude-code/skills)** so any
+harness that supports the skill format — Claude Code, the Agent SDK, and others —
+can reach for a cross-model second opinion on its own. The skill is just a
+directory with a `SKILL.md`; installing it copies that directory into the
+harness's skills folder.
+
+```bash
+consensus-skill               # → ~/.claude/skills/consensus   (personal)
+consensus-skill --project     # → ./.claude/skills/consensus   (checked into a repo)
+consensus-skill --dir <path>  # → <path>/consensus             (any harness's skills dir)
+consensus-skill --force       # overwrite an existing install
+consensus-skill --print       # print the bundled skill's source path
+```
+
+From a clone without a global install, `npm run skill:install -- --project` does
+the same thing. The skill drives the `consensus` binary over the shell, so that
+still has to be installed and on `PATH` — the installer reminds you if it isn't.
+
+Once installed, the agent invokes consensus when a question is high-stakes,
+contested, or worth cross-checking, runs it non-interactively (`consensus --json
+"…"`), and reports the merged answer along with any dissent. The skill source
+lives in [`skill/`](skill/SKILL.md) if you want to read or adapt it.
+
 ## License
 
 MIT
