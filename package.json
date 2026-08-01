@@ -4,12 +4,15 @@
   "description": "Ask one prompt to many AI model CLIs in parallel, then synthesize a canonical answer.",
   "type": "module",
   "bin": {
-    "consensus": "dist/cli.js"
+    "consensus": "dist/cli.js",
+    "consensus-skill": "scripts/install-skill.mjs"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist",
+    "skill",
+    "scripts/install-skill.mjs",
     "README.md"
   ],
   "engines": {
@@ -19,6 +22,7 @@
     "build": "tsc && chmod +x dist/cli.js",
     "dev": "tsc --watch",
     "start": "node dist/cli.js",
+    "skill:install": "node scripts/install-skill.mjs",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
