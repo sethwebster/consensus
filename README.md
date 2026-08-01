@@ -435,11 +435,8 @@ passes, [semantic-release](https://semantic-release.gitbook.io) works out the
 next version from the commit messages, publishes to npm, writes `CHANGELOG.md`,
 and cuts a GitHub release.
 
-**consensus is alpha.** Releases are prereleases — `0.1.0-alpha.1`,
-`0.1.0-alpha.2`, and so on — so the version says outright that interfaces can
-still move. They publish to the `latest` dist-tag anyway, so a plain
-`npm install` gets the newest one rather than something stale. Graduating means
-dropping `prerelease` from `.releaserc.json`, and the next release is `0.1.0`.
+The version stays below `1.0.0` while the interfaces settle, which under
+[semver](https://semver.org/#spec-item-4) means anything may still change.
 
 **The version comes from how commits are worded**, so a change only ships if its
 commit says what it is:
