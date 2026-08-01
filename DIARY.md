@@ -13,6 +13,12 @@ live in [LEARNINGS.md](LEARNINGS.md); do not restate them here.
    wrong expectations, not broken code. Read the actual output before touching
    `src/`.
 4. **Run `npm test` before any push.** Never push red without asking first.
+5. **Write every commit as a conventional commit.** `fix:` for a patch, `feat:`
+   for a minor, `feat!:` to break, `chore:`/`docs:`/`test:`/`refactor:` for
+   anything that should not ship. A push to `main` publishes to npm off these
+   words alone, so a mislabelled commit either releases nothing or releases the
+   wrong bump. If work landed unprefixed and needs releasing, add an empty
+   commit with the right prefix.
 
 ## Keeping the suite clean
 

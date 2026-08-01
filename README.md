@@ -428,6 +428,36 @@ contested, or worth cross-checking, runs it non-interactively (`consensus --json
 "…"`), and reports the merged answer along with any dissent. The skill source
 lives in [`skill/`](skill/SKILL.md) if you want to read or adapt it.
 
+## Releasing
+
+Releases are automatic. Every push to `main` runs the test suite, and if it
+passes, [semantic-release](https://semantic-release.gitbook.io) works out the
+next version from the commit messages, publishes to npm, writes `CHANGELOG.md`,
+and cuts a GitHub release.
+
+**The version comes from how commits are worded**, so a change only ships if its
+commit says what it is:
+
+| Commit message              | Release |
+| --------------------------- | ------- |
+| `fix: stop dropping stderr` | patch   |
+| `feat: add skill install`   | minor   |
+| `feat!: drop Node 18`       | major*  |
+| `chore: tidy imports`       | none    |
+
+\* while the version is below `1.0.0`, a breaking change bumps the minor.
+
+Anything else — `docs:`, `test:`, `refactor:`, or no prefix at all — is committed
+without publishing. To release work that has already landed unprefixed, add an
+empty commit describing it:
+
+```bash
+git commit --allow-empty -m "fix: correct the wheel modifier mask"
+```
+
+Publishing needs one repository secret, `NPM_TOKEN`, holding an npm automation
+token with publish rights. `GITHUB_TOKEN` is provided by Actions.
+
 ## License
 
 MIT

@@ -44,6 +44,24 @@ do about it — instructions live in [DIARY.md](DIARY.md).
 - A failing panel member appends its resolved binary, argv, PATH, exit status,
   and full stderr to `CONFIG_DIR/debug.log`.
 
+## Release pipeline
+
+- `.github/workflows/ci.yml` runs the suite on every push and PR; the release
+  job is `needs: test`, so nothing publishes from a red build.
+- Publishing needs an `NPM_TOKEN` repository secret. `GITHUB_TOKEN` is supplied
+  by Actions, and `@semantic-release/git` needs `contents: write` to push the
+  version bump and tag back to `main`.
+- A scoped package publishes as restricted unless `publishConfig.access` is
+  `public`. The old `release` script passed `--access public` by hand;
+  semantic-release does not, so the field is now in `package.json`.
+- semantic-release derives the current version from **git tags, not npm**. The
+  repo had no tags while npm already had 0.0.1, so its first automated release
+  would have been 1.0.0 — `v0.0.1` is now tagged at `0ec70eb` to anchor it.
+- No commit before the automation used a conventional prefix, so a dry run
+  reports "no relevant changes" and publishes nothing.
+- CI runs Node 24 because the suite needs unflagged type stripping (22.18+),
+  while the published CLI is plain JS and still meets the `>=20` engines floor.
+
 ## Repo conventions
 
 - `CLAUDE.md` is a symlink to `AGENTS.md`, and it changed three times during one

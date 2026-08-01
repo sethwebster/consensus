@@ -18,6 +18,9 @@
   "engines": {
     "node": ">=20"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc && chmod +x dist/cli.js",
     "dev": "tsc --watch",
@@ -26,7 +29,7 @@
     "test": "npm run build && tsc -p tsconfig.test.json && node --test \"test/**/*.test.ts\"",
     "test:only": "node --test \"test/**/*.test.ts\"",
     "prepublishOnly": "npm run build",
-    "release": "npm publish --access public"
+    "release": "semantic-release"
   },
   "keywords": [
     "ai",
@@ -47,8 +50,11 @@
     "react": "^19.2.8"
   },
   "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
     "@types/node": "^22.10.0",
     "@types/react": "^19.2.17",
+    "semantic-release": "^25.0.8",
     "typescript": "^5.7.0"
   }
 }
