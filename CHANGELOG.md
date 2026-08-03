@@ -1,3 +1,10 @@
+# [0.2.0](https://github.com/sethwebster/consensus/compare/v0.1.0...v0.2.0) (2026-08-03)
+
+
+### Features
+
+* **tui:** give the prompt a bordered input box with room to breathe ([c1c4d7e](https://github.com/sethwebster/consensus/commit/c1c4d7e1f995fb6f09148a2096ca160642e80202))
+
 # [0.1.0](https://github.com/sethwebster/consensus/compare/v0.0.1...v0.1.0) (2026-08-01)
 
 

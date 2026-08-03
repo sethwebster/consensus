@@ -1,6 +1,6 @@
 {
   "name": "@sethwebster/consensus",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Ask one prompt to many AI model CLIs in parallel, then synthesize a canonical answer.",
   "type": "module",
   "bin": {
