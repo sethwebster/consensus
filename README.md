@@ -27,9 +27,26 @@ independent ownership, release cycles, access control, or tech stacks.
 ## Install
 
 ```bash
+npm install -g @sethwebster/consensus
+```
+
+Or try it without installing anything:
+
+```bash
+npx @sethwebster/consensus "when should I choose a monorepo over polyrepo?"
+```
+
+Node 20 or newer. The CLI installs as `consensus`.
+
+### From source
+
+```bash
+git clone https://github.com/sethwebster/consensus.git
+cd consensus
 npm install
 npm run build
 npm install -g .   # puts `consensus` on your PATH
+npm run tui        # or run the REPL straight from the checkout
 ```
 
 ## Setup
