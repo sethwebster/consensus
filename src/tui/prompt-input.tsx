@@ -1,5 +1,6 @@
 import { Box, Text, useInput } from "ink";
 import { useState } from "react";
+import { promptSegments } from "./layout.js";
 
 export interface PromptInputProps {
   value: string;
@@ -115,7 +116,7 @@ export function PromptInput({
     { isActive: focus },
   );
 
-  const segments = layout(value, width);
+  const segments = promptSegments(value, width);
   const cursorSegment = Math.max(
     0,
     segments.findLastIndex((segment) => segment.start <= cursor),
@@ -151,48 +152,6 @@ export function PromptInput({
       ))}
     </Box>
   );
-}
-
-interface Segment {
-  text: string;
-  /** Absolute offset of this segment's first character within the value. */
-  start: number;
-}
-
-/**
- * Break the value into display rows.
- *
- * Wrapping is done here rather than left to the terminal: the terminal breaks
- * mid-word and restarts at column zero, which loses the alignment under the
- * prompt marker and puts the cursor somewhere other than where the text is.
- * Every character is preserved exactly, so offsets still map to screen
- * positions.
- */
-function layout(value: string, width: number): Segment[] {
-  const max = Math.max(4, Math.floor(width));
-  const segments: Segment[] = [];
-  let lineStart = 0;
-
-  for (const line of value.split("\n")) {
-    let index = 0;
-
-    if (line.length === 0) segments.push({ text: "", start: lineStart });
-
-    while (index < line.length) {
-      let end = Math.min(index + max, line.length);
-      if (end < line.length) {
-        // Prefer breaking after the last space that fits.
-        const space = line.lastIndexOf(" ", end);
-        if (space > index) end = space + 1;
-      }
-      segments.push({ text: line.slice(index, end), start: lineStart + index });
-      index = end;
-    }
-
-    lineStart += line.length + 1;
-  }
-
-  return segments.length > 0 ? segments : [{ text: "", start: 0 }];
 }
 
 /**

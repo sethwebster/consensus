@@ -7,6 +7,7 @@ const ROOT = new URL("..", import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL("package.json", ROOT), "utf8")) as {
   name: string;
   bin: Record<string, string>;
+  scripts: Record<string, string>;
   files: string[];
   publishConfig?: { access?: string };
   repository?: { type?: string; url?: string } | string;
@@ -23,6 +24,10 @@ test("the published package contains every binary it declares", () => {
   for (const [name, path] of Object.entries(manifest.bin)) {
     assert.ok(shipped.has(path), `bin "${name}" points at ${path}, which is not in the tarball`);
   }
+});
+
+test("npm run tui builds and launches the full-screen REPL", () => {
+  assert.match(manifest.scripts.tui ?? "", /npm run build && node dist\/cli\.js tui/);
 });
 
 test("the published package contains the skill the installer copies", () => {

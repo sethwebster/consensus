@@ -33,6 +33,7 @@
     "build": "tsc && chmod +x dist/cli.js",
     "dev": "tsc --watch",
     "start": "node dist/cli.js",
+    "tui": "npm run build && node dist/cli.js tui",
     "skill:install": "node scripts/install-skill.mjs",
     "test": "npm run build && tsc -p tsconfig.test.json && node --test \"test/**/*.test.ts\"",
     "test:only": "node --test \"test/**/*.test.ts\"",

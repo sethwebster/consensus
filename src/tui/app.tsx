@@ -13,6 +13,7 @@ import { editInEditor } from "./editor.js";
 // Ink has no mouse support, so wheel reports arrive here as ordinary input.
 import { mouseStartsOn, setMouseReporting, wheelDelta } from "./mouse.js";
 import { useConversation, useSession, useTabLines, useViewport } from "./hooks.js";
+import { paneLayout } from "./layout.js";
 import { PromptInput } from "./prompt-input.js";
 import type { Line, Tab } from "./lines.js";
 import { turnTabs } from "./lines.js";
@@ -107,7 +108,7 @@ export function App({ session, cwd, control }: AppProps) {
   const completionRows = Math.min(matches.length, 6);
 
   const width = Math.max(20, columns - 2);
-  const paneHeight = Math.max(3, rows - 5 - completionRows);
+  const { paneHeight, inputWidth } = paneLayout({ rows, columns, completionRows, draft });
   const lines = useConversation(snapshot, width, detail);
   const viewport = useViewport(lines, paneHeight, scroll, follow);
 
@@ -594,9 +595,7 @@ export function App({ session, cwd, control }: AppProps) {
         <CompletionList matches={matches} selected={matchIndex} rows={completionRows} />
       ) : null}
 
-      <Divider width={width} />
-
-      <Box flexShrink={0}>
+      <Box flexShrink={0} borderStyle="round" borderDimColor paddingX={1}>
         <Text color={snapshot.busy ? "yellow" : "cyan"}>❯ </Text>
         <PromptInput
           value={draft}
@@ -604,7 +603,7 @@ export function App({ session, cwd, control }: AppProps) {
           onSubmit={submit}
           focus={overlay === null}
           suppressSubmit={matches.length > 0}
-          width={Math.max(10, width - 2)}
+          width={inputWidth}
           placeholder={snapshot.busy ? "type to queue the next prompt…" : "Ask the panel…"}
         />
       </Box>
